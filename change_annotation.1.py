@@ -2,16 +2,16 @@
 
 import sys, getopt, re
 
-# Usage: python3 change_annotation.1.py --in_list=/scratch/shutingcho/phyto38/phyto38.03/phyto38.03.length --out_file=/scratch/shutingcho/phyto38/phyto38.03/phyto38.03.w200.bed --win_size=250
+# Usage: python3 /home/shutingcho/pyscript/change_annotation.1.py --in_list=/home/shutingcho/project/phyto30/phyto30.14/run3/effector/run3.list.2 --in_list_index=0 --in_info=/home/shutingcho/project/phyto30/phyto30.12/info/PLY_v1.cds.03.info.ko.cog.desc.merg --in_info_index=0 --match_pattern=hypothetical protein --match_index=8 --change_to=putative effector --out_info=/home/shutingcho/project/phyto30/phyto30.12/info/PLY_v1.cds.03.info.ko.cog.desc.merg.1
 
-opts = getopt.getopt(sys.argv[1:], '', longopts=[
+opts, args = getopt.getopt(sys.argv[1:], '', longopts=[
 	'in_list=', 
 	'in_list_index=', 
 	'in_info=', 
 	'in_info_index=', 
-	'match_pattern='
-	'match_index='
-	'change_to='
+	'match_pattern=',
+	'match_index=',
+	'change_to=',
 	'out_info='])
 
 # get variables from opts
@@ -60,7 +60,7 @@ with open(in_file) as in_file_h:
 			else:
 				unchanged_num += 1
 				out_file_h.write(line)
-				print(line)
+				print(words[in_file_index], words[match_index])
 			candidates.remove(words[in_file_index])
 		else:
 			out_file_h.write(line)
@@ -68,7 +68,8 @@ out_file_h.close()
 
 # print candidates not in in_file
 if candidates:
-	print(str(len(candidates)), 'items not in in_info: \n', '\n'.join(candidates))
+	print(str(len(candidates)), 'items not in in_info: ') 
+	print('\n'.join(candidates))
 
 # print report
 print('count_in = ', str(candidate_num), ', count_changed = ', str(changed_num), ', count_unchanged = ', str(unchanged_num))
