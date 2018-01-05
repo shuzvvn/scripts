@@ -1,57 +1,75 @@
 #!/usr/bin/python3
 
-import sys, getopt
+import sys, getopt, re
 
-# Usage: python3 make_bed.1.py --in_list=/scratch/shutingcho/phyto38/phyto38.03/phyto38.03.length --out_file=/scratch/shutingcho/phyto38/phyto38.03/phyto38.03.w200.bed --win_size=250
+# Usage: python3 change_annotation.1.py --in_list=/scratch/shutingcho/phyto38/phyto38.03/phyto38.03.length --out_file=/scratch/shutingcho/phyto38/phyto38.03/phyto38.03.w200.bed --win_size=250
 
-opts, args = getopt.getopt(sys.argv[1:], '', longopts=['in_list=', 'in_info=', 'out_info='])
+opts = getopt.getopt(sys.argv[1:], '', longopts=[
+	'in_list=', 
+	'in_list_index=', 
+	'in_info=', 
+	'in_info_index=', 
+	'match_pattern='
+	'match_index='
+	'change_to='
+	'out_info='])
 
 # get variables from opts
 for opt, arg in opts:
 	if opt == "--in_list":
-		inList = arg
+		in_list = str(arg)
+	elif opt == "--in_list_index":
+		in_list_index = int(arg)
 	elif opt == "--in_info":
-		inInfo = arg
+		in_file = str(arg)
+	elif opt == "--in_info_index":
+		in_file_index = int(arg)
+	elif opt == "--match_pattern":
+		match_pattern = str(arg)
+	elif opt == "--match_index":
+		match_index = int(arg)
+	elif opt == "--change_to":
+		change_to = str(arg)
 	elif opt == "--out_info":
-		outFile = arg
+		out_file = str(arg)
 	else:
 		assert False, "unhandled option"
 
-candidates=[]
+# count number for record
+changed_num = 0
+unchanged_num = 0
 
-with open(inList) as inList_h:
-    for line in inList_h:
-        words = line.split('\t')
-        candidates.append(words[0])
-
-outFile_h = open(outFile, 'w')
-
-with open(inInfo) as inInfo_h:
-	for line in inInfo_h:
-		line = line.rstrip('\n')
+# get list of in candidates
+candidates = []
+with open(in_list) as in_list_h:
+	for line in in_list_h:
 		words = line.split('\t')
-		if words[0] in candidates:
-            if words[8] == 'hypothetical protein':
-                words[8] = 'putative effector'
-            else:
-                print('\t'.join(words))
+		candidates.append(words[in_list_index])
+candidate_num = len(candidates)
 
+out_file_h = open(out_file, 'w')
 
-
-                
-        chrID = str(words[0])
-		lgth = int(words[1])
-		i = 0
-		while i < lgth:
-			start = i + 1
-			windowID = lastWinID + i / setWinSize + 1
-			if i < (lgth - setWinSize):
-				end = i + setWinSize
+with open(in_file) as in_file_h:
+	for line in in_file_h:
+		words = line.split('\t')
+		if words[in_file_index] in candidates:
+			if re.match(match_pattern, words[match_index]): # re.match(pattern, string)
+				words[match_index] = change_to
+				changed_num += 1
+				out_file_h.write('\t'.join(words))
 			else:
-				end = lgth
-			winSize = end - start + 1
-			outFile_h.write('%s\t%s\t%s\t.\t.\t+\t%s\t%s\n' % (str(chrID), str(start), str(end), str(int(windowID)), str(winSize)))
-			i += setWinSize
-		lastWinID = windowID
-outFile_h.close()
+				unchanged_num += 1
+				out_file_h.write(line)
+				print(line)
+			candidates.remove(words[in_file_index])
+		else:
+			out_file_h.write(line)
+out_file_h.close()
+
+# print candidates not in in_file
+if candidates:
+	print(str(len(candidates)), 'items not in in_info: \n', '\n'.join(candidates))
+
+# print report
+print('count_in = ', str(candidate_num), ', count_changed = ', str(changed_num), ', count_unchanged = ', str(unchanged_num))
 # end of script
