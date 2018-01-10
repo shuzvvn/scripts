@@ -11,9 +11,9 @@ import sys, getopt, re
 # --out_file=/home/shutingcho/project/phyto39/phyto39.03/SNP.2.out
 
 opts, args = getopt.getopt(sys.argv[1:], '', longopts=[
-	'in_list=', 
-	'in_list_index=', 
-	'cds_info=', 
+	'in_list=',
+	'in_list_index=',
+	'cds_info=',
 	'pseudo_info=',
 	'other_info=',
 	'out_file='])
@@ -86,7 +86,7 @@ for i in snp_list: # each SNP position
 				if feature_ranges == cds_ranges:
 					feature_type = 'cds'
 					count_cds += 1
-				elif feature_ranges == pseudo_info:
+				elif feature_ranges == pseudo_ranges:
 					feature_type = 'pseudo'
 					count_pseudo += 1
 				else:
@@ -110,6 +110,6 @@ for i in init_snp_list:
 out_file_h.close()
 
 # print report
-print('count_in = %i, in_cds = %i, in_pseudo = %i, in_other_genes = %i, intergenic = %i' % (len(init_snp_list), count_cds, count_pseudo, count_others, count_intergenic))
+print('count_in = %i, count_cds = %i, count_pseudo = %i, count_others = %i, intergenic = %i' % (len(init_snp_list), count_cds, count_pseudo, count_others, count_intergenic))
 
 # end of script
