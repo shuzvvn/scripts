@@ -5,10 +5,11 @@
 # Shu-Ting Cho <vivianlily6@hotmail.com>
 # report SNP position, in inter/intragenic region
 # v1 2018/01/11
-# v2 2018/02/25
+# v2 2018/02/26
 # in_list => vcf
+# include genome(locus) in the record
 
-# Usage: python /home/shutingcho/pyscript/SNP_position.2.py --in_list=/home/shutingcho/project/phyto39/phyto39.03/SNP.2.list --in_list_index=0 --cds_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/cds/CP000061.info --pseudo_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/pseudo/CP000061.info --other_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/RNA/CP000061.RNA --out_file=/home/shutingcho/project/phyto39/phyto39.03/SNP.CP000061.out
+# Usage: python /home/shutingcho/pyscript/SNP_position.2.py --vcf=/home/shutingcho/project/phyto39/phyto39.03/SNP.2.list --cds_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/cds/CP000061.info --pseudo_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/pseudo/CP000061.info --other_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/RNA/CP000061.RNA --out_file=/home/shutingcho/project/phyto39/phyto39.03/SNP.CP000061.out
 
 import sys, getopt, re
 
@@ -34,7 +35,7 @@ for opt, arg in opts:
 		out_file = str(arg)
 	else:
 		assert False, "unhandled option"
-
+'''
 # function to get list
 def get_list_from_table(in_file, in_index = 0):
 	out_list = []
@@ -44,6 +45,7 @@ def get_list_from_table(in_file, in_index = 0):
 			words = line.strip('\n').split('\t')
 			out_list.append(words[in_index])
 	return out_list
+'''
 
 # function to get dict from vcf
 def get_dict_from_table(in_file, key_index = 0, value_index = 1):
@@ -57,7 +59,7 @@ def get_dict_from_table(in_file, key_index = 0, value_index = 1):
 				out_dict[words[key_index]]
 			except:
 				out_dict[words[key_index]] = []
-			out_dict[words[key_index]].append(words[value_index])
+			out_dict[words[key_index]].append(int(words[value_index]))
 	return out_dict
 
 # function to get dict
@@ -83,7 +85,7 @@ if cds_info:
 	cds_ranges = get_range_from_info(cds_info, 'CDS', 1, 3, 7)
 	all_feature_dict = cds_ranges.copy()
 if pseudo_info:
-	pseudo_ranges = get_range_from_info(pseudo_info, 'psuedo', 1, 3, 7)
+	pseudo_ranges = get_range_from_info(pseudo_info, 'pseudo', 1, 3, 7)
 	for locus in pseudo_ranges:
 		all_feature_dict[locus].update(pseudo_ranges[locus])
 if other_info:
@@ -93,9 +95,8 @@ if other_info:
 
 # store result in a dict
 out_dict = {}
-# store count for SNP in each feature
-intragenic_dict = {}
 # intragenic SNP
+intragenic_dict = {}
 for locus in all_feature_dict:
 	out_dict[locus] = {}
 	intragenic_dict[locus] = []
@@ -115,7 +116,7 @@ for locus in snp_dict:
 	intergenic_dict[locus] = [x for x in snp_dict[locus] if x not in intragenic_dict[locus]]
 try:
 	for locus in intergenic_dict:
-		for i in intragenic_dict[locus]:
+		for i in intergenic_dict[locus]:
 			out_dict[locus][int(i)] = ['intergenic']
 except:
 	pass
@@ -133,69 +134,17 @@ for locus in out_dict:
 		elif out_dict[locus][i][0] == 'intergenic':
 			count_intergenic += 1
 		else:
-			print('WTF is this: ' + out_dict[locus][i])
+			print('WTF is this: ' , out_dict[locus][i])
 
 # write output
 count_snp = 0
 out_file_h = open(out_file, 'w')
 for locus in snp_dict:
 	for i in snp_dict[locus]:
-		out_file_h.write(locus + '\t' + i + '\t' + '\t'.join(out_dict[locus][int(i)]) + '\n')
+		out_file_h.write(locus + '\t' + str(i) + '\t' + '\t'.join(out_dict[locus][int(i)]) + '\n')
 		count_snp += 1
 out_file_h.close()
+
 # print report
 print('count_SNP = %i\ncount_in_cds = %i\ncount_in_pseudo = %i\ncount_in_others = %i\ncount_in_intergenic = %i' % (count_snp, count_cds, count_pseudo, count_others, count_intergenic))
 # end of script
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-'''
-for feature_ranges in feature_lists: # each info dict
-	for feature_range in feature_ranges: # each range in dict
-		snp_in_range = 0 # init snp in this range
-		for i in snp_list:
-			i = int(i)
-			if i in feature_range:
-				snp_in_range += 1
-				if feature_ranges == cds_ranges:
-					feature_type = 'cds'
-					count_cds += 1
-				elif feature_ranges == pseudo_ranges:
-					feature_type = 'pseudo'
-					count_pseudo += 1
-				else:
-					feature_type = 'others'
-					count_others += 1
-				out_dict[i] = [feature_type] + feature_ranges[feature_range]
-				intragenic_list.append(str(i))
-			else:
-				if snp_in_range != 0:
-					break
-# intergenic SNP
-intergenic_list = [x for x in snp_list if x not in intragenic_list]
-if intergenic_list:
-	count_intergenic = len(intergenic_list)
-	feature_type = 'intergenic'
-	for i in intergenic_list:
-		i = int(i)
-		out_dict[i] = [feature_type]
-# write output
-out_file_h = open(out_file, 'w')
-for i in snp_list:
-	out_file_h.write(i + '\t' + '\t'.join(out_dict[int(i)]) + '\n')
-out_file_h.close()
-# print report
-print('count_SNP = %i\ncount_in_cds = %i\ncount_in_pseudo = %i\ncount_in_others = %i\ncount_in_intergenic = %i' % (len(snp_list), count_cds, count_pseudo, count_others, count_intergenic))
-# end of script
-'''
