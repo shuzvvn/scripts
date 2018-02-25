@@ -8,7 +8,7 @@
 # v2 2018/02/25
 # in_list => vcf
 
-# Usage: python /home/shutingcho/pyscript/SNP_position.1.py --in_list=/home/shutingcho/project/phyto39/phyto39.03/SNP.2.list --in_list_index=0 --cds_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/cds/CP000061.info --pseudo_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/pseudo/CP000061.info --other_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/RNA/CP000061.RNA --out_file=/home/shutingcho/project/phyto39/phyto39.03/SNP.CP000061.out
+# Usage: python /home/shutingcho/pyscript/SNP_position.2.py --in_list=/home/shutingcho/project/phyto39/phyto39.03/SNP.2.list --in_list_index=0 --cds_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/cds/CP000061.info --pseudo_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/pseudo/CP000061.info --other_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/RNA/CP000061.RNA --out_file=/home/shutingcho/project/phyto39/phyto39.03/SNP.CP000061.out
 
 import sys, getopt, re
 
@@ -81,28 +81,86 @@ snp_dict = get_dict_from_table(vcf)
 all_feature_dict = {}
 if cds_info:
 	cds_ranges = get_range_from_info(cds_info, 'CDS', 1, 3, 7)
-	all_feature_dict = cds_ranges
+	all_feature_dict = cds_ranges.copy()
 if pseudo_info:
 	pseudo_ranges = get_range_from_info(pseudo_info, 'psuedo', 1, 3, 7)
 	for locus in pseudo_ranges:
-		all_feature_dict[locus] = {**all_feature_dict[locus], **pseudo_ranges[locus]}
+		all_feature_dict[locus].update(pseudo_ranges[locus])
 if other_info:
-	other_ranges = get_range_from_info(other_info, 'RNA', 1, 3, 7)
-	for locus in pseudo_ranges:
-		all_feature_dict[locus] = {**all_feature_dict[locus], **pseudo_ranges[locus]}
-
-'''
+	other_ranges = get_range_from_info(other_info, 'others', 1, 3, 7)
+	for locus in other_ranges:
+		all_feature_dict[locus].update(other_ranges[locus])
 
 # store result in a dict
 out_dict = {}
-
 # store count for SNP in each feature
-count_cds = 0
-count_pseudo = 0
-count_others = 0
-intragenic_list = []
-
+intragenic_dict = {}
 # intragenic SNP
+for locus in all_feature_dict:
+	out_dict[locus] = {}
+	intragenic_dict[locus] = []
+	for feature_range in all_feature_dict[locus]:
+		snp_in_range = 0
+		for i in snp_dict[locus]:
+			if int(i) in feature_range:
+				snp_in_range += 1
+				out_dict[locus][int(i)] = all_feature_dict[locus][feature_range]
+				intragenic_dict[locus].append(int(i))
+			elif snp_in_range != 0: # next snp not in the same feature
+				break # jump to next feature range
+
+# intergenic SNP
+intergenic_dict = {}
+for locus in snp_dict:
+	intergenic_dict[locus] = [x for x in snp_dict[locus] if x not in intragenic_dict[locus]]
+try:
+	for locus in intergenic_dict:
+		for i in intragenic_dict[locus]:
+			out_dict[locus][int(i)] = ['intergenic']
+except:
+	pass
+
+# count SNP in feature
+count_cds, count_pseudo, count_others, count_intergenic = 0, 0, 0, 0
+for locus in out_dict:
+	for i in out_dict[locus]:
+		if out_dict[locus][i][0] == 'CDS':
+			count_cds += 1
+		elif out_dict[locus][i][0] == 'pseudo':
+			count_pseudo += 1
+		elif out_dict[locus][i][0] == 'others':
+			count_others += 1
+		elif out_dict[locus][i][0] == 'intergenic':
+			count_intergenic += 1
+		else:
+			print('WTF is this: ' + out_dict[locus][i])
+
+# write output
+count_snp = 0
+out_file_h = open(out_file, 'w')
+for locus in snp_dict:
+	for i in snp_dict[locus]:
+		out_file_h.write(locus + '\t' + i + '\t' + '\t'.join(out_dict[locus][int(i)]) + '\n')
+		count_snp += 1
+out_file_h.close()
+# print report
+print('count_SNP = %i\ncount_in_cds = %i\ncount_in_pseudo = %i\ncount_in_others = %i\ncount_in_intergenic = %i' % (count_snp, count_cds, count_pseudo, count_others, count_intergenic))
+# end of script
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+'''
 for feature_ranges in feature_lists: # each info dict
 	for feature_range in feature_ranges: # each range in dict
 		snp_in_range = 0 # init snp in this range
@@ -124,7 +182,6 @@ for feature_ranges in feature_lists: # each info dict
 			else:
 				if snp_in_range != 0:
 					break
-
 # intergenic SNP
 intergenic_list = [x for x in snp_list if x not in intragenic_list]
 if intergenic_list:
@@ -133,15 +190,12 @@ if intergenic_list:
 	for i in intergenic_list:
 		i = int(i)
 		out_dict[i] = [feature_type]
-
 # write output
 out_file_h = open(out_file, 'w')
 for i in snp_list:
 	out_file_h.write(i + '\t' + '\t'.join(out_dict[int(i)]) + '\n')
 out_file_h.close()
-
 # print report
 print('count_SNP = %i\ncount_in_cds = %i\ncount_in_pseudo = %i\ncount_in_others = %i\ncount_in_intergenic = %i' % (len(snp_list), count_cds, count_pseudo, count_others, count_intergenic))
-
 # end of script
 '''
