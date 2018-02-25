@@ -10,7 +10,7 @@ from Bio import SeqIO
 
 import pdb, sys, getopt
 
-# Usage: python3 /home/shutingcho/pyscript/change_annotation.1.py --in_list=/home/shutingcho/project/phyto30/phyto30.14/run3/effector/run3.list.2 --in_list_index=0 --in_info=/home/shutingcho/project/phyto30/phyto30.12/info/PLY_v1.cds.03.info.ko.cog.desc.merg --in_info_index=0 --match_pattern=hypothetical protein --match_index=8 --change_to=putative effector --out_info=/home/shutingcho/project/phyto30/phyto30.12/info/PLY_v1.cds.03.info.ko.cog.desc.merg.1
+# Usage: python /mnt/c/Users/vvn/pyscript/convert_gb_to_bed.1.py --in_file=/mnt/c/Users/vvn/Documents/IPMB/phyto29/v2.gb --out_file=/mnt/c/Users/vvn/Documents/IPMB/phyto29/v2.bed
 
 opts, args = getopt.getopt(sys.argv[1:], '', longopts=[
 	'in_file=', 
@@ -26,20 +26,34 @@ for opt, arg in opts:
 		assert False, "unhandled option"
 
 outf = open(out_file, 'w')
-	for record in SeqIO.parse(open(in_file, "rU"), "genbank") :
-		for feature in record.features:
-			if feature.type == 'gene':
-				start = feature.location.start.position
-				stop = feature.location.end.position
-				try:
-					name = feature.qualifiers['gene'][0]
-				except:
-					# some features only have a locus tag
-					name = feature.qualifiers['locus_tag'][0]
-				if feature.strand < 0:
-					strand = "-"
+for record in SeqIO.parse(open(in_file, "rU"), "genbank") :
+	locus = record.name
+	for feature in record.features:
+		if feature.type != 'source':
+			start = feature.location.start.position
+			stop = feature.location.end.position
+			try:
+				name = feature.qualifiers['locus_tag'][0] + ':' + feature.qualifiers['gene'][0]
+			except:
+				# some features only have a locus tag
+				name = feature.qualifiers['locus_tag'][0]
+			if feature.strand < 0:
+				strand = "-"
+			else:
+				strand = "+"
+			try:
+				if feature.qualifiers['pseudo']:
+					colorcode = '153,153,153'
+			except:
+				if feature.type == 'tRNA':
+					colorcode = '51,102,255'
+				elif feature.type == 'rRNA':
+					colorcode = '51,204,51'
+				elif feature.type == 'CDS':
+					colorcode = '0,51,102'
 				else:
-					strand = "+"
-				bed_line = "record.name\t{0}\t{1}\t{2}\t1000\t{3}\t{0}\t{1}\t65,105,225\n".format(start, stop, name, strand)
-				outf.write(bed_line)
+					colorcode = False
+			if colorcode:
+				bed_line = "\t{0}\t{1}\t{2}\t1000\t{3}\t{0}\t{1}\t{4}\n".format(start, stop, name, strand, colorcode)
+				outf.write(locus + bed_line)
 outf.close()
