@@ -5,9 +5,7 @@
 # Shu-Ting Cho <vivianlily6@hotmail.com>
 # report SNP position, in inter/intragenic region
 # v1 2018/01/11
-# v2 2018/02/26
-# in_list => vcf
-# include genome(locus) in the record
+# v2 2018/02/26: in_list => vcf; include genome(locus) in the record
 
 # Usage: python /home/shutingcho/pyscript/SNP_position.2.py --vcf=/home/shutingcho/project/phyto39/phyto39.03/SNP.2.list --cds_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/cds/CP000061.info --pseudo_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/pseudo/CP000061.info --other_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/RNA/CP000061.RNA --out_file=/home/shutingcho/project/phyto39/phyto39.03/SNP.CP000061.out
 
@@ -35,17 +33,15 @@ for opt, arg in opts:
 		out_file = str(arg)
 	else:
 		assert False, "unhandled option"
-'''
+
 # function to get list
-def get_list_from_table(in_file, in_index = 0):
+def get_list_from_table(in_file, index_0 = 0, index_1 = 1):
 	out_list = []
-	in_index = int(in_index)
 	with open(in_file, 'r') as in_file_h:
 		for line in in_file_h:
 			words = line.strip('\n').split('\t')
-			out_list.append(words[in_index])
+			out_list.append((words[int(index_0)], words[int(index_1)]))
 	return out_list
-'''
 
 # function to get dict from vcf
 def get_dict_from_table(in_file, key_index = 0, value_index = 1):
@@ -77,6 +73,7 @@ def get_range_from_info(in_file, feature_type, key_index = 1, start_index = 3, n
 	return out_dict
 
 # get list of SNP
+snp_list = get_list_from_table(vcf)
 snp_dict = get_dict_from_table(vcf)
 
 # get list of feature ranges
@@ -121,28 +118,24 @@ try:
 except:
 	pass
 
-# count SNP in feature
-count_cds, count_pseudo, count_others, count_intergenic = 0, 0, 0, 0
-for locus in out_dict:
-	for i in out_dict[locus]:
-		if out_dict[locus][i][0] == 'CDS':
-			count_cds += 1
-		elif out_dict[locus][i][0] == 'pseudo':
-			count_pseudo += 1
-		elif out_dict[locus][i][0] == 'others':
-			count_others += 1
-		elif out_dict[locus][i][0] == 'intergenic':
-			count_intergenic += 1
-		else:
-			print('WTF is this: ' , out_dict[locus][i])
-
 # write output
-count_snp = 0
+count_snp, count_cds, count_pseudo, count_others, count_intergenic = 0, 0, 0, 0, 0
+
 out_file_h = open(out_file, 'w')
-for locus in snp_dict:
-	for i in snp_dict[locus]:
-		out_file_h.write(locus + '\t' + str(i) + '\t' + '\t'.join(out_dict[locus][int(i)]) + '\n')
-		count_snp += 1
+for i in snp_list:
+	count_snp += 1
+	out_file_h.write(str(i[0]) + '\t' + str(i[1]) + '\t' + '\t'.join(out_dict[i[0]][int(i[1])]) + '\n')
+	feature_type = out_dict[i[0]][int(i[1])][0]
+	if feature_type == 'CDS':
+		count_cds += 1
+	elif feature_type == 'pseudo':
+		count_pseudo += 1
+	elif feature_type == 'others':
+		count_others += 1
+	elif feature_type == 'intergenic':
+		count_intergenic += 1
+	else:
+		print('WTF is this:', str(i[0]), str(i[1]), '\t'.join(out_dict[i[0]][int(i[1])]))
 out_file_h.close()
 
 # print report
