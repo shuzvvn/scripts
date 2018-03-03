@@ -1,24 +1,20 @@
 #!/usr/bin/python3
 
-# SNP_position.3.py
+# SNP_position.2.py
 
 # Shu-Ting Cho <vivianlily6@hotmail.com>
 # report SNP position, in inter/intragenic region
 # v1 2018/01/11
 # v2 2018/02/26: in_list => vcf; include genome(locus) in the record
-# v3 2018/03/01: import vcf module; define nonsynonymous SNP
 
-# Usage: python /home/shutingcho/pyscript/SNP_position.2.py --vcf=/home/shutingcho/project/phyto39/phyto39.03/SNP.2.list --cds_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/cds/CP000061.info --ntfasta=/--pseudo_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/pseudo/CP000061.info --other_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/RNA/CP000061.RNA --out_file=/home/shutingcho/project/phyto39/phyto39.03/SNP.CP000061.out
+# Usage: python /home/shutingcho/pyscript/SNP_position.2.py --vcf=/home/shutingcho/project/phyto39/phyto39.03/SNP.2.list --cds_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/cds/CP000061.info --pseudo_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/pseudo/CP000061.info --other_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/RNA/CP000061.RNA --out_file=/home/shutingcho/project/phyto39/phyto39.03/SNP.CP000061.out
 
-python /home/shutingcho/pyscript/SNP_position.3.py --vcf=/home/shutingcho/project/phyto29/phyto29.03/bwa.AS280.vcf --cds_info=/home/shutingcho/project/phyto29/phyto29.03/v5/PLY_v1.cds.03.2.info.ko.cog.desc.merg --nt_fasta=/home/shutingcho/project/phyto29/phyto29.03/v5/v2.nt.fasta --pseudo_info=/home/shutingcho/project/phyto29/phyto29.03/v5/PLY_v1.pseudo.02.info.ko.cog.desc.merg --other_info=/home/shutingcho/project/phyto29/phyto29.03/v5/PLY_v1.RNA.info --out_file=/home/shutingcho/project/phyto29/phyto29.03/v5/SNP.PLY.out
-
-import sys, getopt, re, vcf
+import sys, getopt, re
 
 # get options
 opts, args = getopt.getopt(sys.argv[1:], '', longopts=[
 	'vcf=',
 	'cds_info=',
-	'nt_fasta=',
 	'pseudo_info=',
 	'other_info=',
 	'out_file='])
@@ -29,8 +25,6 @@ for opt, arg in opts:
 		vcf = str(arg)
 	elif opt == "--cds_info":
 		cds_info = str(arg)
-	elif opt == "--nt_fasta":
-		nt_fasta = str(arg)
 	elif opt == "--pseudo_info":
 		pseudo_info = str(arg)
 	elif opt == "--other_info":
