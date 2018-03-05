@@ -6,14 +6,14 @@
 # report SNP position, in inter/intragenic region
 # v1 2018/01/11
 # v2 2018/02/26: in_list => vcf; include genome(locus) in the record
-# v3 2018/03/01: import vcf module; define nonsynonymous SNP
+# v3 2018/03/05: import vcf,biopython module; define nonsynonymous SNP
 
-# Usage: python /home/shutingcho/pyscript/SNP_position.2.py --in_vcf=/home/shutingcho/project/phyto39/phyto39.03/SNP.2.list --cds_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/cds/CP000061.info --ntfasta=/--pseudo_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/pseudo/CP000061.info --RNA_info=/scratch/shutingcho/phyto39/phyto39.03/source_data/RNA/CP000061.RNA --out_file=/home/shutingcho/project/phyto39/phyto39.03/SNP.CP000061.out
+# Usage: python3 /mnt/c/Users/vvn/pyscript/SNP_position.3.py --in_vcf=/mnt/c/Users/vvn/project/phyto29/phyto29.03/bwa.AS280.vcf --cds_info=/mnt/c/Users/vvn/project/phyto29/phyto29.03/PLY_v1.cds.03.2.info.ko.cog.desc.merg --nt_fasta=/mnt/c/Users/vvn/project/phyto29/phyto29.03/v2.nt.fasta --transl_table=11 --pseudo_info=/mnt/c/Users/vvn/project/phyto29/phyto29.03/PLY_v1.pseudo.02.info.ko.cog.desc.merg --RNA_info=/mnt/c/Users/vvn/project/phyto29/phyto29.03/PLY_v1.RNA.info --out_file=/mnt/c/Users/vvn/project/phyto29/phyto29.03/SNP.PLY.out
 
 import sys, getopt, re, vcf
 
 # for dna translation
-from Bio.seq import Seq
+from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 
 # for reading fasta file
@@ -24,6 +24,7 @@ opts, args = getopt.getopt(sys.argv[1:], '', longopts=[
 	'in_vcf=',
 	'cds_info=',
 	'nt_fasta=',
+	'transl_table=',
 	'pseudo_info=',
 	'RNA_info=',
 	'out_file='])
@@ -35,7 +36,9 @@ for opt, arg in opts:
 	elif opt == "--cds_info":
 		cds_info = str(arg)
 	elif opt == "--nt_fasta":
-		ntfasta_dict = SeqIO.to_dict(SeqIO.parse(str(arg), 'fasta'))
+		ntfasta_dict = SeqIO.index(str(arg), 'fasta')
+	elif opt == "--transl_table":
+		transl_table = int(arg)
 	elif opt == "--pseudo_info":
 		pseudo_info = str(arg)
 	elif opt == "--RNA_info":
@@ -52,7 +55,9 @@ def get_range_from_info(in_file, feature_type, key_index = 1, start_index = 3, n
 	with open(in_file, 'r') as in_file_h:
 		for line in in_file_h:
 			words = line.strip('\n').split('\t')
-			if not out_dict[words[key_index]]: 
+			try:
+				out_dict[words[key_index]]
+			except:
 				out_dict[words[key_index]] = {} # set each locus as a dict
 			# key is feature range, value is feature info
 			# dict[locus][range(feature_start, feature_end)] = [feature_type, locus_tag, gene_name, product]
@@ -97,11 +102,10 @@ def SNP_mutate(nt_seq, position, alt): # position start from 1
 	return new_seq
 
 # check non-synonymous mutation
-def check_mutation(transl_table = 11, nt1, nt2):
-	genetic_code = int(transl_table)
+def check_mutation(transl_table, nt1, nt2):
 	coding_dna_1 = Seq(nt1, IUPAC.unambiguous_dna)
 	coding_dna_2 = Seq(nt2, IUPAC.unambiguous_dna)
-	if str(coding_dna_1.translate(table = genetic_code)) == str(coding_dna_2.translate(table = genetic_code)):
+	if str(coding_dna_1.translate(table = transl_table)) == str(coding_dna_2.translate(table = transl_table)):
 		return True
 	else:
 		return False
@@ -139,11 +143,12 @@ for vcf_record_i in vcf_reader: # for each vcf record
 			if len(vcf_record_i.REF) == len(vcf_record_i.ALT[0]):
 				#vcf_record_o.add_vcf_type('SNP')
 				if feature_record[0] == 'CDS':
-					ori_seq = str(ntfasta_dict[feature_record[1]])
+					ori_seq = str(ntfasta_dict[feature_record[1]].seq)
 					position = mutate_pos(feature_range, vcf_record_i.POS)
 					for alt in vcf_record_i.ALT:
+						alt = str(alt)
 						new_seq = SNP_mutate(ori_seq, position, alt)
-						vcf_record_o.add_mut_type(check_mutation(11, ori_seq, new_seq))
+						vcf_record_o.add_mut_type(check_mutation(transl_table, ori_seq, new_seq))
 			elif len(vcf_record_i.REF) > len(vcf_record_i.ALT[0]):
 				vcf_record_o.add_vcf_type('deletion')
 			else:
@@ -155,15 +160,17 @@ for vcf_record_i in vcf_reader: # for each vcf record
 	out_vcf_record.append(vcf_record_o)
 
 # write output
-count_vcf, count_cds, count_pseudo, count_RNA, count_intergenic = 0, 0, 0, 0, 0
+count_vcf, count_cds, count_pseudo, count_RNA, count_intergenic, count_nonsynonymous = 0, 0, 0, 0, 0, 0
 
 out_file_h = open(out_file, 'w')
 for i in out_vcf_record:
 	count_vcf += 1
-	vcf_record_list = [i.CHROM, i.POS, i.REF, i.ALT, i.vcf_type, i.feature_type, i.mut_type, i.locus_tag, i.name, i.product]
-	out_file_h.write('\t'.join(vcf_record_list + '\n'))
+	vcf_record_list = [i.CHROM, i.POS, i.REF, ','.join([str(j) for j in i.ALT]), i.vcf_type, i.feature_type, ','.join([str(j) for j in i.mut_type]), i.locus_tag, i.name, i.product]
+	out_file_h.write('\t'.join([str(j) for j in vcf_record_list]) + '\n')
 	if i.feature_type == 'CDS':
 		count_cds += 1
+		if i.vcf_type == 'SNP' and 'non-synonymous' in i.mut_type:
+			count_nonsynonymous += 1
 	elif i.feature_type == 'pseudo':
 		count_pseudo += 1
 	elif i.feature_type == 'RNA':
@@ -175,5 +182,5 @@ for i in out_vcf_record:
 out_file_h.close()
 
 # print report
-print('count_vcf = %i\ncount_in_cds = %i\ncount_in_pseudo = %i\ncount_in_RNAs = %i\ncount_in_intergenic = %i' % (count_vcf, count_cds, count_pseudo, count_RNA, count_intergenic))
+print('vcf = %i\ncds = %i\nnon-synonymous = %i\npseudo = %i\nRNAs = %i\nintergenic = %i' % (count_vcf, count_cds, count_nonsynonymous, count_pseudo, count_RNA, count_intergenic))
 # end of script
