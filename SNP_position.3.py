@@ -60,8 +60,8 @@ def get_range_from_info(in_file, feature_type, key_index = 1, start_index = 3, n
 			except:
 				out_dict[words[key_index]] = {} # set each locus as a dict
 			# key is feature range, value is feature info
-			# dict[locus][range(feature_start, feature_end)] = [feature_type, locus_tag, gene_name, product]
-			out_dict[words[key_index]][range(int(words[start_index]), int(words[start_index+1])+1)] = [feature_type, words[0], words[name_index], words[name_index+1]]
+			# dict[locus][range(feature_start, feature_end)] = [feature_type, locus_tag, gene_name, product, strand]
+			out_dict[words[key_index]][range(int(words[start_index]), int(words[start_index+1])+1)] = [feature_type, words[0], words[name_index], words[name_index+1], words[name_index-1]]
 	return out_dict
 
 # class to record the vcf characterization record
@@ -92,8 +92,11 @@ class VcfOut:
 			self.mut_type.append('non-synonymous')
 
 # get mutating postion in feature
-def mutate_pos(feature_range, SNP_position):
-	position = int(SNP_position) - feature_range[0] + 1
+def mutate_pos(feature_range, strand, SNP_position):
+	if strand == 1: # forward strand
+		position = int(SNP_position) - feature_range[0] + 1
+	else: # reverse strand
+		position = feature_range[-1] - int(SNP_position) + 1
 	return position
 
 # get mut_coding_dna
@@ -134,7 +137,7 @@ for vcf_record_i in vcf_reader: # for each vcf record
 	vcf_record_o = VcfOut(locus, vcf_record_i.POS, vcf_record_i.REF, vcf_record_i.ALT)
 	intragenic_switch = False # init switch to False
 	for feature_range in all_feature_dict[locus]: # for each range in the vcf locating locus 
-		feature_record = all_feature_dict[locus][feature_range] # dict[locus][range(feature_start, feature_end)] = [feature_type, locus_tag, gene_name, product]
+		feature_record = all_feature_dict[locus][feature_range] # dict[locus][range(feature_start, feature_end)] = [feature_type, locus_tag, gene_name, product, strand]
 		#snp_in_range = 0
 		if (vcf_record_i.POS in feature_range) and (not intragenic_switch):
 			intragenic_switch = True # switch on
@@ -144,7 +147,8 @@ for vcf_record_i in vcf_reader: # for each vcf record
 				#vcf_record_o.add_vcf_type('SNP')
 				if feature_record[0] == 'CDS':
 					ori_seq = str(ntfasta_dict[feature_record[1]].seq)
-					position = mutate_pos(feature_range, vcf_record_i.POS)
+					strand = int(feature_record[4])
+					position = mutate_pos(feature_range, strand, vcf_record_i.POS)
 					for alt in vcf_record_i.ALT:
 						alt = str(alt)
 						new_seq = SNP_mutate(ori_seq, position, alt)
