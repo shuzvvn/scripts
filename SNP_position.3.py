@@ -99,8 +99,13 @@ def mutate_pos(feature_range, strand, SNP_position):
 		position = feature_range[-1] - int(SNP_position) + 1
 	return position
 
+
+
 # get mut_coding_dna
-def SNP_mutate(nt_seq, position, alt): # position start from 1
+def SNP_mutate(nt_seq, position, alt, strand): # position start from 1
+	if not strand == 1:
+		complement = {'A':'T', 'T':'A', 'C':'G', 'G':'C'}
+		alt = complement[alt]
 	new_seq = nt_seq[:int(position)-1] + alt + nt_seq[int(position):]
 	return new_seq
 
@@ -151,7 +156,7 @@ for vcf_record_i in vcf_reader: # for each vcf record
 					position = mutate_pos(feature_range, strand, vcf_record_i.POS)
 					for alt in vcf_record_i.ALT:
 						alt = str(alt)
-						new_seq = SNP_mutate(ori_seq, position, alt)
+						new_seq = SNP_mutate(ori_seq, position, alt, strand)
 						vcf_record_o.add_mut_type(check_mutation(transl_table, ori_seq, new_seq))
 			elif len(vcf_record_i.REF) > len(vcf_record_i.ALT[0]):
 				vcf_record_o.add_vcf_type('deletion')
