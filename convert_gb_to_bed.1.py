@@ -1,16 +1,19 @@
-#!/usr/bin/env python
-# encoding: utf-8
-"""
-bed_from_genbank.py
-grab the gene records from a genbank file (edit for other record types).
-- requires:  biopython
-"""
+#!/usr/bin/python3
+
+# convert_gb_to_bed.1.py
+
+# Shu-Ting Cho <vivianlily6@hotmail.com>
+# grab the gene records from a genbank file
+# requires:  biopython
+
+# v1 2018/02/25
+
 
 from Bio import SeqIO
 
-import pdb, sys, getopt
+import sys, getopt
 
-# Usage: python /mnt/c/Users/vvn/pyscript/convert_gb_to_bed.1.py --in_file=/mnt/c/Users/vvn/Documents/IPMB/phyto29/v2.gb --out_file=/mnt/c/Users/vvn/Documents/IPMB/phyto29/v2.bed
+# Usage: python3 /home/shutingcho/pyscript/convert_gb_to_bed.1.py --in_file=/home/shutingcho/project/phyto30/phyto30.12/tbl2asn/v2.gb --out_file=/home/shutingcho/project/phyto29/phyto29.03/v2.bed
 
 opts, args = getopt.getopt(sys.argv[1:], '', longopts=[
 	'in_file=', 
