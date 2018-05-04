@@ -1,0 +1,16 @@
+#!/bin/bash
+mkdir -p ${out_dir}
+
+# get regionX
+read -p "contigID:start-end: " regionX
+echo Getting region.sam from .bam ...
+samtools view ${bam_file} "${regionX}" | samtools view -Shu -t ${ref_fasta}.fai - | samtools sort -m 30000000000 - ${out_dir}regionX ;
+echo Getting region.id from region.sam ...
+samtools view ${out_dir}regionX.bam | cut -f 1 > ${out_dir}regionX.id ;
+echo Extracting raw reads by region.id ...
+perl /home/rubisco0319/plscript_ws/extract_fasta_by_regex.1.pl --in_file=${paired_fasta} --list_file=${out_dir}regionX.id --out_file=${out_dir}regionX.fasta --index_in="0" --regex_in="${reads_header}(\d:\d+:\d+:\d+)$" --regex_out1="(\S+\s\d)\S+" --regex_out2="${reads_header}" --verbose="1" ;
+echo Running phrap ...
+phrap ${out_dir}regionX.fasta &> ${out_dir}regionX.phrapout ;
+echo Renaming contigs from phrap results...
+perl /home/chkuo/plscript/seq_rename_regex.6.pl --in_file=${out_dir}regionX.fasta.contigs --out_file=${out_dir}regionX.fasta.contigs.rename --regex="\/regionX.fasta.(Contig\d+)";
+cat ${out_dir}regionX.fasta.contigs.rename
