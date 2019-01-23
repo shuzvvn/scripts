@@ -41,6 +41,13 @@ for opt, arg in opts:
 	else:
 		assert False, "unhandled option"
 
+# make dir if not exist
+import os
+if out_file:
+	out_dir = os.path.dirname(out_file)
+	if not os.path.exists(out_dir):
+		os.makedirs(out_dir)
+
 # function to cut nt seq base on SP cleavage cite position
 count_in, count_out = 0, 0
 print('#locus_tag\tcut_after:\tmature_nt')
@@ -57,6 +64,5 @@ with open(out_file, 'w') as out_file_h:
 			print('%s\t%i\t%i' % (id_h, mature_start-1, len(out_seq_h)))
 			count_out += 1
 		except:
-			print(str(id_h) + ' was not found in in_fasta!!!')
-			break
+			print(str(id_h) + ' was not found!!!')
 print('count_in = %i, count_out = %i, count_diff = %i' % (count_in, count_out, count_in - count_out))
