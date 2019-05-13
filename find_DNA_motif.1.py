@@ -80,7 +80,7 @@ if min_match_num < len(motif_seq):
 				hit_num = hit_num + 1
 			window_end = window_end + 1
 		sum_dict[seq_id] = hit_num
-		print('\n')
+		print('===')
 	# print report
 	for seq_id in sum_dict:
 		print(seq_id + ' = ' + str(sum_dict[seq_id]))
