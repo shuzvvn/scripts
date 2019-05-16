@@ -70,7 +70,7 @@ IUPAC_dict = {'A':['A'], 'T':['T'], 'C':['C'], 'G':['G'], 'M':['A','C'], 'R':['A
 
 # check inputs and report
 # min_match_num cant be longer than motif length
-if min_match_num < len(motif_seq):
+if min_match_num <= len(motif_seq):
 	sum_dict = {}
 	print('input_seq = %i\nmotif_lgth = %i' % (len(record_dict), len(motif_seq)))
 	for seq_id in record_dict.keys():
