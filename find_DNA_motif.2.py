@@ -90,10 +90,16 @@ if min_match_num <= len(motif_seq):
 				sliding_word = str(record_dict[seq_id].seq)[window_start:window_end]
 			# compare seqs, same strand
 			if score_seqs(sliding_word, motif_seq) >= min_match_num:
-				print('%s\t%i\t%i\t%i\t%i\t%s' % (seq_id, window_start + 1, window_end, score_seqs(sliding_word, motif_seq), 1, sliding_word))
+				if window_start < 0:
+					print('%s\t%i\t%i\t%i\t%i\t%s' % (seq_id, window_start, window_end, score_seqs(sliding_word, motif_seq), 1, sliding_word))
+				else:
+					print('%s\t%i\t%i\t%i\t%i\t%s' % (seq_id, window_start + 1, window_end, score_seqs(sliding_word, motif_seq), 1, sliding_word))
 				hit_num = hit_num + 1
 			elif (check_RC and score_seqs(reverse_complement(sliding_word), motif_seq) >= min_match_num):
-				print('%s\t%i\t%i\t%i\t%i\t%s' % (seq_id, window_start + 1, window_end, score_seqs(reverse_complement(sliding_word), motif_seq), -1, reverse_complement(sliding_word)))
+				if window_start < 0:
+					print('%s\t%i\t%i\t%i\t%i\t%s' % (seq_id, window_start, window_end, score_seqs(reverse_complement(sliding_word), motif_seq), -1, reverse_complement(sliding_word)))
+				else:
+					print('%s\t%i\t%i\t%i\t%i\t%s' % (seq_id, window_start + 1, window_end, score_seqs(reverse_complement(sliding_word), motif_seq), -1, reverse_complement(sliding_word)))
 				hit_num = hit_num + 1
 			window_end = window_end + 1
 		sum_dict[seq_id] = hit_num
