@@ -215,7 +215,7 @@ for vcf_record_i in vcf_reader: # for each vcf record
 	vcf_record_o = VcfOut(locus, vcf_record_i.POS, vcf_record_i.REF, vcf_record_i.ALT)
 	if '-' in vcf_record_i.REF:
 		vcf_record_i.REF = ''
-	elif '-' in vcf_record_i.ALT:
+	elif '-' in vcf_record_i.ALT[0]:
 		vcf_record_i.ALT = ['']
 	if len(vcf_record_i.REF) == len(vcf_record_i.ALT[0]):
 		vcf_record_o.add_vcf_type('SNP')
