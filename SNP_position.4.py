@@ -196,7 +196,7 @@ try:
 			for line in in_file_h:
 				words = line.strip('\n').split('\t')
 				locus = str(words[index_CHROM])
-				vcf_reader.append(VcfOut(locus, words[index_POS], words[index_REF], [words[index_ALT]]))
+				vcf_reader.append(VcfOut(locus, int(words[index_POS]), words[index_REF], [words[index_ALT]]))
 	except IOError:
 		print("Could not read file: ", diff)
 except:
@@ -224,9 +224,10 @@ for vcf_record_i in vcf_reader: # for each vcf record
 	else:
 		vcf_record_o.add_vcf_type('insertion')
 	intragenic_switch = False # init switch to False
+
 	for feature_range in all_feature_dict[locus]: # for each range in the vcf locating locus 
 		feature_record = all_feature_dict[locus][feature_range] # dict[locus][range(feature_start, feature_end)] = [feature_type, locus_tag, gene_name, product, strand]
-		if (vcf_record_i.POS in feature_range) and (not intragenic_switch):
+		if (vcf_record_i.POS in feature_range) and (not intragenic_switch):	
 			intragenic_switch = True # switch on
 			vcf_record_o.add_feature_info(feature_record[0], feature_record[1], feature_record[2], feature_record[3])
 			if feature_record[0] == 'CDS' and vcf_record_o.vcf_type == 'SNP':
