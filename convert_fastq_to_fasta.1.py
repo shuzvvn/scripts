@@ -12,10 +12,6 @@
 
 # for reading fasta file
 from Bio import SeqIO
-try:
-	from StringIO import StringIO # Python 2
-except ImportError:
-	from io import StringIO # Python 3
 
 # for making directory
 import os
@@ -51,3 +47,4 @@ for opt, arg in opts:
 # convert(in_file, in_format, out_file, out_format, alphabet=None)
 SeqIO.convert(infastq, "fastq", out_fasta, "fasta")
 SeqIO.convert(infastq, "fastq", out_qual, "qual")
+
