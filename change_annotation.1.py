@@ -56,7 +56,7 @@ with open(in_file) as in_file_h:
 			if re.match(match_pattern, words[match_index]): # re.match(pattern, string)
 				words[match_index] = change_to
 				changed_num += 1
-				out_file_h.write('\t'.join(words))
+				out_file_h.write('\t'.join(words) + '\n')
 			else:
 				unchanged_num += 1
 				out_file_h.write(line)
