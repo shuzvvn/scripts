@@ -1,1 +1,1 @@
-# python_code
+# scripts for genomics projects
