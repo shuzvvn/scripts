@@ -76,6 +76,7 @@ for opt, arg in opts:
 		try:
 			reader = csv.reader(file_h, delimiter = '\t')
 			ncol = len(next(reader)) # Read first line and count columns
+			file_h.seek(0)
 		except ValueError:
 			outmessage = "File not in tsv format: " + str(arg)
 			sys.exit(outmessage)
@@ -157,6 +158,8 @@ count_table = 0
 # count seqs in output file
 count_out = 0
 
+
+
 # write output
 out_file_h = open(out_file, 'w')
 
@@ -198,6 +201,8 @@ for line in file_h:
 					seq_out_start = 1
 				else:
 					seq_out_start = seq_pos_start - downstream
+		else:
+			seq_out_start = 1
 
 		if index_end != None:
 			seq_pos_end = int(words[index_end])
@@ -211,6 +216,8 @@ for line in file_h:
 					seq_out_end = len(record_h.seq)
 				else:
 					seq_out_end = seq_pos_end + upstream
+		else:
+			seq_out_end = len(record_h.seq)
 
 		# get seq
 		if seq_strand == 1:
@@ -227,7 +234,7 @@ for line in file_h:
 		count_out += 1
 
 	except:
-		print(str(seq_name_in) + ' not found!!!')
+	 	print(str(seq_name_in) + ' not found!!!')
 
 
 # close files
