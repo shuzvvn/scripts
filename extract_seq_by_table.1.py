@@ -190,12 +190,12 @@ for line in file_h:
 			seq_pos_start = int(words[index_start])
 			if seq_strand == 1:
 				if seq_pos_start - upstream < 0:
-					seq_out_start = 0
+					seq_out_start = 1
 				else:
 					seq_out_start = seq_pos_start - upstream
 			else:
 				if seq_pos_start - downstream < 0:
-					seq_out_start = 0
+					seq_out_start = 1
 				else:
 					seq_out_start = seq_pos_start - downstream
 
@@ -214,9 +214,9 @@ for line in file_h:
 
 		# get seq
 		if seq_strand == 1:
-			seq_h = record_h.seq[seq_out_start:seq_out_end]
+			seq_h = record_h.seq[seq_out_start-1:seq_out_end]
 		else:
-			seq_h = record_h.seq[seq_out_start:seq_out_end].reverse_complement()
+			seq_h = record_h.seq[seq_out_start-1:seq_out_end].reverse_complement()
 
 		# write output		
 		if index_start == None and index_end == None and index_strand == None:
@@ -229,8 +229,11 @@ for line in file_h:
 	except:
 		print(str(seq_name_in) + ' not found!!!')
 
+
+# close files
 out_file_h.close()
 file_h.close()
+
 
 # print verbose
 if verbose:
