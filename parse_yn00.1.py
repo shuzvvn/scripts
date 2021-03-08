@@ -86,7 +86,7 @@ with os.scandir(in_dir) as entries:
 						dNdS = round(dN / dS, 4)
 
 					# write to output
-					out_file_h.write(str(seq_1) + '\t' + str(seq_2) + '\t' + str(dNdS) + '\t' + str(dN) + '\t' + str(dS) + '\n')
+					out_file_h.write(str(file_id) + '\t' + str(seq_1) + '\t' + str(seq_2) + '\t' + str(dNdS) + '\t' + str(dN) + '\t' + str(dS) + '\n')
 
 			# close files
 			out_file_h.close()
