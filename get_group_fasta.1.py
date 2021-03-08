@@ -54,9 +54,9 @@ for opt, arg in opts:
 	elif opt == "--out_dir":
 		out_dir = str(arg).rstrip("/")
 	elif opt == "--rename":
-		rename = bool(arg)
+		rename = int(arg)
 	elif opt == "--verbose":
-		verbose = bool(arg)
+		verbose = int(arg)
 	else:
 		assert False, "unhandled option"
 
@@ -67,7 +67,8 @@ import os
 if not os.path.exists(out_dir):
 	os.makedirs(out_dir)
 
-
+rename = bool(rename)
+verbose = bool(verbose)
 
 ## main ##
 
